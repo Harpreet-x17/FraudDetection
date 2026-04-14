@@ -4,4 +4,11 @@ seaborn
 pandas
 matplotlib
 scikit-learn
+catboost
+xgboost
+dill
+fastapi
+uvicorn
+jinja2
+python-multipart
 -e .

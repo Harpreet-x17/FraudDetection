@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fraud Detection System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+      .form-container {
+        padding: 40px;
+      }
+      .form-group {
+        margin-bottom: 25px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #e74c3c;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .btn-submit {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+      }
+      .result-box {
+        margin-top: 30px;
+        padding: 25px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+      .result-box.fraud {
+        background: #ffe6e6;
+        color: #c0392b;
+        border: 2px solid #e74c3c;
+      }
+      .result-box.safe {
+        background: #e6ffe6;
+        color: #27ae60;
+        border: 2px solid #2ecc71;
+      }
+      .info-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+      .info-section h3 {
+        color: #333;
+        margin-bottom: 15px;
+      }
+      .info-section ul {
+        list-style: none;
+        padding-left: 0;
+      }
+      .info-section li {
+        padding: 8px 0;
+        color: #666;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .info-section li:last-child {
+        border-bottom: none;
+      }
+      .info-section li::before {
+        content: "🔒 ";
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🛡️ Fraud Detection System</h1>
+        <p>Real-time Financial Transaction Fraud Analysis</p>
+      </div>
+
+      <div class="form-container">
+        <form
+          action="{{ request.url_for('predict_datapoint_post') }}"
+          method="post"
+        >
+          <div class="form-group">
+            <label for="type">Transaction Type</label>
+            <select id="type" name="type" required>
+              <option value="" disabled selected>
+                Select transaction type
+              </option>
+              <option value="PAYMENT">Payment</option>
+              <option value="TRANSFER">Transfer</option>
+              <option value="CASH_OUT">Cash Out</option>
+              <option value="DEBIT">Debit</option>
+              <option value="CASH_IN">Cash In</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Transaction Amount ($)</label>
+            <input
+              type="number"
+              id="amount"
+              name="amount"
+              step="0.01"
+              min="0"
+              placeholder="Enter transaction amount"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="oldbalanceOrg">Sender's Balance Before ($)</label>
+              <input
+                type="number"
+                id="oldbalanceOrg"
+                name="oldbalanceOrg"
+                step="0.01"
+                min="0"
+                placeholder="Original sender balance"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="newbalanceOrig">Sender's Balance After ($)</label>
+              <input
+                type="number"
+                id="newbalanceOrig"
+                name="newbalanceOrig"
+                step="0.01"
+                min="0"
+                placeholder="New sender balance"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="oldbalanceDest">Receiver's Balance Before ($)</label>
+              <input
+                type="number"
+                id="oldbalanceDest"
+                name="oldbalanceDest"
+                step="0.01"
+                min="0"
+                placeholder="Original receiver balance"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="newbalanceDest">Receiver's Balance After ($)</label>
+              <input
+                type="number"
+                id="newbalanceDest"
+                name="newbalanceDest"
+                step="0.01"
+                min="0"
+                placeholder="New receiver balance"
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            🔍 Analyze Transaction
+          </button>
+        </form>
+
+        {% if results is defined %}
+        <div
+          class="result-box {% if results == 1 %}fraud{% else %}safe{% endif %}"
+        >
+          {% if results == 1 %} ⚠️ FRAUD DETECTED - This transaction appears to
+          be fraudulent! {% else %} ✅ SAFE TRANSACTION - No fraud detected! {%
+          endif %}
+        </div>
+        {% endif %} {% if error %}
+        <div class="result-box fraud">{{ error }}</div>
+        {% endif %}
+
+        <div class="info-section">
+          <h3>About This System</h3>
+          <ul>
+            <li>Uses machine learning to detect fraudulent transactions</li>
+            <li>Analyzes transaction patterns and balance changes</li>
+            <li>Provides instant risk assessment</li>
+            <li>Helps prevent financial fraud in real-time</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
